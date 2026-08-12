@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated"
+}
+
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum ProjectType {
+  PERSONAL
+  TEAM
+}
+
+enum TaskStatus {
+  IDEAL
+  PENDING
+  RUNNING
+  COMPLETE
+  PAUSED
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatarUrl String?  @map("avatar_url")
+
+  // Relations
+  todos         Todo[]
+  projects      Project[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Todo {
+  id     String   @id @default(cuid())
+  title  String
+  status String   // e.g., "pending" | "completed"
+  date   DateTime @default(now())
+
+  // Relation to User
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("todos")
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  date        DateTime    @default(now())
+  type        ProjectType @default(PERSONAL)
+
+  // Relation to User (owner)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relation to Tasks
+  tasks Task[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  title     String
+  date      DateTime   @default(now())
+  status    TaskStatus @default(IDEAL)
+  totalTime Int        @default(0) @map("total_time") // Stored in minutes or seconds
+
+  // Relation to Project
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Self-Relation for Subtasks (One-to-Many)
+  parentId String? @map("parent_id")
+  parent   Task?   @relation("TaskSubTasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subTasks Task[]  @relation("TaskSubTasks")
+
+  
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tasks")
+}

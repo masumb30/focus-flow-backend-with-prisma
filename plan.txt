@@ -1,0 +1,148 @@
+
+projectRouter.get('/', authenticateUser, ProjectController.getAllProjects);
+
+const getAllProjects = async (req: any, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized access.' });
+    }
+
+    const projects = await ProjectService.getAllProjects(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Projects retrieved successfully.',
+      data: projects,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch projects.',
+    });
+  }
+};
+
+frontend example: 
+  const fetchTodos = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    const { token, isAuthenticated } = getAuthData();
+
+    if (!isAuthenticated || !token) {
+      setError('You must be logged in to view your tasks.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:4000/todos', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch todos.');
+      }
+
+      const data: Todo[] = await response.json();
+      setTodos(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+the prisma schema model: 
+
+model Project {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  date        DateTime    @default(now())
+  type        ProjectType @default(PERSONAL)
+
+  // Relation to User (owner)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relation to Tasks
+  tasks Task[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  title     String
+  date      DateTime   @default(now())
+  status    TaskStatus @default(IDEAL)
+  totalTime Int        @default(0) @map("total_time") // Stored in minutes or seconds
+
+  // Relation to Project
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Self-Relation for Subtasks (One-to-Many)
+  parentId String? @map("parent_id")
+  parent   Task?   @relation("TaskSubTasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subTasks Task[]  @relation("TaskSubTasks")
+
+  
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tasks")
+}
+
+[DESIGN SYSTEM CONTEXT - MANDATORY]
+You are generating a UI component for a high-productivity project tracking, task management, and time logging web app ("FocusFlow").
+Strictly adhere to the following design system, pure Tailwind CSS classes, and light/dark mode requirements. Do not use external component libraries.
+
+1. COLOR PALETTE (Strict adherence required; always provide dark: variants):
+   - Primary (Focus & Momentum): Tailwind Indigo spectrum
+     * Light: text-indigo-600 / bg-indigo-600 / hover:bg-indigo-700
+     * Dark: text-indigo-400 / bg-indigo-500 / hover:bg-indigo-600
+   - Secondary (Project Tags & Categories): Tailwind Violet/Purple spectrum
+     * Light: bg-violet-50 text-violet-700 border-violet-200
+     * Dark: bg-violet-950/50 text-violet-300 border-violet-800/60
+   - Semantic State Tokens (Crucial for Timer & Task Statuses):
+     * Active / Timer Running: Emerald (Light: bg-emerald-500/10 text-emerald-700 border-emerald-200 | Dark: bg-emerald-500/20 text-emerald-400 border-emerald-800/60)
+     * Paused / Pending: Amber (Light: bg-amber-500/10 text-amber-700 border-amber-200 | Dark: bg-amber-500/20 text-amber-400 border-amber-800/60)
+     * Completed: Slate (Light: text-slate-400 line-through | Dark: text-slate-500 line-through)
+     * High Priority / Overdue: Rose (Light: bg-rose-50 text-rose-700 border-rose-200 | Dark: bg-rose-950/40 text-rose-400 border-rose-800/60)
+   - Backgrounds (Architectural Slate/Zinc - High Clarity):
+     * Light Mode: bg-slate-50 (Main Canvas) | bg-white (Cards, Modals, Elevators)
+     * Dark Mode: bg-slate-950 (Main Canvas) | bg-slate-900 (Cards, Modals, Elevators)
+   - Typography & Borders:
+     * Light Mode: text-slate-900 (Headings) | text-slate-600 (Body) | border-slate-200/80
+     * Dark Mode: text-slate-100 (Headings) | text-slate-400 (Body) | border-slate-800/80
+
+2. SPACING, DENSITY & LAYOUT:
+   - Mobile-first responsive grid (sm:, md:, lg:, xl:).
+   - High information density with clean breathing room:
+     * Compact cards/list items: p-3.5 or p-4
+     * Standard project cards & tracking widgets: p-5 or p-6
+     * Dashboard sections/containers: space-y-4 or gap-4
+   - Tabular numerals (`font-mono` or `tabular-nums`) for timers, tracked hours, and stopwatches to prevent layout jitter.
+
+3. AESTHETICS & SHAPES:
+   - Corners: Use `rounded-xl` for standard cards/widgets and `rounded-lg` for buttons, badges, and inputs (crisp, precise, productivity-focused).
+   - Interactive: All actions must use `transition-all duration-200 ease-in-out` with hover elevation (`hover:border-slate-300 dark:hover:border-slate-700`).
+   - Active Indicators: Pulsing dots (`animate-pulse`) on active timers; crisp radial progress or bar fills for project completion %.
+   - Focus states: Explicit focus ring (`focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900`).
+
+4. CODE OUTPUT RULES:
+   - Return clean, semantic HTML/JSX using ONLY pure Tailwind CSS utility classes.
+   - Fully light and dark mode compliant with the `dark:` prefix on every background, text, border, and hover class.
