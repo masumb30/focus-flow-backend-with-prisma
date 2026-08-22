@@ -22,6 +22,10 @@ app.use(
 
 app.use(express.json());
 
+app.get("/", (req, res)=> {
+  res.send("api is working")
+})
+
 app.use('/', router);
 
 

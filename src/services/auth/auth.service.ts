@@ -50,6 +50,7 @@ const signUpUser = async (data: SignUpDTO) => {
  * Authenticates user and generates JWT token
  */
 const signInUser = async (data: SignInDTO) => {
+  console.log('reached sign in service with data: ', data )
   const user = await prisma.user.findUnique({
     where: { email: data.email },
   });
