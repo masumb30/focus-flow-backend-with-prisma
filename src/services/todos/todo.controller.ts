@@ -15,7 +15,7 @@ export interface AuthenticatedRequest extends Request {
  * POST /api/todos - Create new task
  */
 const createTodo = async (req: AuthenticatedRequest, res: Response) => {
-  console.log('hitting createtodo with: ', req.body)
+  
   try {
     const userId = req.user?.id;
     const { title } = req.body;

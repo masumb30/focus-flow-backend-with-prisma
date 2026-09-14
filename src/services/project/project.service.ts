@@ -66,10 +66,9 @@ const getProjectById = async (projectId: string, userId: string) => {
     },
     include: {
       tasks: {
-        where: { parentId: null }, // Fetch root-level tasks
         include: {
-          subTasks: true, // Fetch subtasks inside root tasks
-        },
+          assignedTo: true,
+        } ,// Fetch root-level tasks
         orderBy: { createdAt: 'desc' },
       },
     },

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma.js';
+import { AppError } from '../../utils/appError.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_jwt_secret_key';
 const JWT_EXPIRES_IN = '7d';
@@ -21,36 +22,38 @@ export interface SignInDTO {
  * Registers a new user with hashed password
  */
 const signUpUser = async (data: SignUpDTO) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
 
-  if (existingUser) {
-    throw new Error('User with this email already exists.');
+  
+  try {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const newUser = await prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+        avatarUrl: data.avatarUrl || null,
+      },
+    });
+    // Exclude password from returned object
+    const { password, ...userWithoutPassword } = newUser;
+    return userWithoutPassword;
+  } catch (error: any) {
+    // console.log("will throw app error for prisma error: ", error.code)
+    
+    if (error.code === 'P2002') {
+      throw new AppError('User with this email already exists.', 409);
+    }
+    throw error; // rethrow other errors
   }
 
-  // Hash password with salt round 10
-  const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  const newUser = await prisma.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
-      avatarUrl: data.avatarUrl || null,
-    },
-  });
-
-  // Exclude password from returned object
-  const { password, ...userWithoutPassword } = newUser;
-  return userWithoutPassword;
 };
 
 /**
  * Authenticates user and generates JWT token
  */
 const signInUser = async (data: SignInDTO) => {
-  console.log('reached sign in service with data: ', data )
+  console.log('reached sign in service with data: ', data)
   const user = await prisma.user.findUnique({
     where: { email: data.email },
   });
@@ -59,11 +62,11 @@ const signInUser = async (data: SignInDTO) => {
     throw new Error('Invalid email or password.');
   }
 
-  console.log('user found: ', user.password, data.password  )
+  console.log('user found: ', user.password, data.password)
 
   const isPasswordValid = await bcrypt.compare(data.password, user.password);
   if (!isPasswordValid) {
-    throw new Error('Invalid email or password.');
+    throw new AppError('Invalid email or password.', 401);
   }
 
   // Payload formatted specifically for frontend extraction & usage

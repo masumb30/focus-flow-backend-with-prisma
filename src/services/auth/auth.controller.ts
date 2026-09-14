@@ -1,34 +1,27 @@
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service.js';
+import { AppError } from '../../utils/appError.js';
 
 const signUp = async (req: Request, res: Response) => {
-  try {
-    const { name, email, password, avatarUrl } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, email, and password are required.',
-      });
-    }
+  const { name, email, password, avatarUrl } = req.body;
 
-    const user = await AuthService.signUpUser({ name, email, password, avatarUrl });
-
-    return res.status(201).json({
-      success: true,
-      message: 'User registered successfully.',
-      data: user,
-    });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Error occurred during registration.',
-    });
+  if (!name || !email || !password) {
+    throw new AppError('Name, email, and password are required.', 400);
   }
+  const user = await AuthService.signUpUser({ name, email, password, avatarUrl });
+
+  return res.status(201).json({
+    success: true,
+    message: 'User registered successfully.',
+    data: {},
+  });
+
+
 };
 
 const signIn = async (req: Request, res: Response) => {
-  console.log('hitting signin with: ', req.body)
+  
   try {
     const { email, password } = req.body;
 
@@ -53,14 +46,11 @@ const signIn = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: 'Signed in successfully.',
-      token,
-      user,
+      data: user
     });
   } catch (error: any) {
-    return res.status(401).json({
-      success: false,
-      message: error.message || 'Authentication failed.',
-    });
+    throw new AppError(error.message || 'Authentication failed.', 401);
+   
   }
 };
 

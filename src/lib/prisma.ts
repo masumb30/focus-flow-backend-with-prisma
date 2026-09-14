@@ -16,8 +16,10 @@ if (!connectionString) {
   );
 }
 
-
+// below line almost never matter, prisma adapter will try to collect 'DATABASE_URL' from .env file even if you hardcode the string here. so that env variable needs to be changed for development vs production, even the conditional logic to pick the right connection for development vs production doesn't seem to be working as expected. 
 const adapter = new PrismaPg({ connectionString });
+// const adapter = new PrismaPg("postgresql://postgres:admin@localhost:5432/prismatest?schema=public");
+
 const prisma = new PrismaClient({ adapter });
 
 export { prisma };

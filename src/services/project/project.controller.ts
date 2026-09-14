@@ -2,6 +2,7 @@ import type { Response } from 'express';
 // Adjust path to your any type
 import { ProjectService } from './project.service.js';
 import { TaskStatus } from './project.interface.js';
+import { AppError } from '../../utils/appError.js';
 
 
 
@@ -14,11 +15,11 @@ const createProject = async (req: any, res: Response) => {
     const { name, description, type } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized access.' });
+      throw new AppError('Unauthorized access.', 401);
     }
 
     if (!name || typeof name !== 'string' || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'Project name is required.' });
+      throw new AppError('Project name is required.', 400);
     }
 
     const project = await ProjectService.createProject({ userId, name, description, type });
@@ -29,10 +30,8 @@ const createProject = async (req: any, res: Response) => {
       data: project,
     });
   } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create project.',
-    });
+    throw new AppError(error.message || 'Failed to create project.', 500);
+   
   }
 };
 

@@ -2,8 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import type { Application, Request, Response, NextFunction } from 'express';
 import router from './routes/index.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+import { requestLogger } from './middlewares/logger.js';
 // Example route import (replace with your actual router)
 // import userRouter from './routes/user.routes';
+
+import cookieParser from 'cookie-parser';
 
 
 
@@ -21,6 +25,9 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
+
+app.use(requestLogger);
 
 app.get("/", (req, res)=> {
   res.send("api is working")
@@ -67,12 +74,15 @@ app.use((_req: Request, res: Response) => {
 });
 
 // --- Global Error Handler ---
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[Error]:', err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
-  });
-});
+// app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+//   console.error('[Error]:', err.stack);
+//   res.status(500).json({
+//     error: 'Internal Server Error',
+//     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+//   });
+// });
+
+app.use(errorHandler);
+
 
 export default app;

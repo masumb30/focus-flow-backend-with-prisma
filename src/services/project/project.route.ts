@@ -7,8 +7,10 @@ const projectRouter = Router();
 
 // Project management routes
 projectRouter.post('/', authenticateUser, ProjectController.createProject);
-projectRouter.get('/', authenticateUser, ProjectController.getAllProjects);
-projectRouter.get('/:id', authenticateUser, ProjectController.getProjectById);
+projectRouter.get('/:type', authenticateUser, ProjectController.getAllProjects);
+projectRouter.get('/:type', authenticateUser, ProjectController.getAllProjects);
+
+projectRouter.get('/details/:id', authenticateUser, ProjectController.getProjectById);
 projectRouter.delete('/:id', authenticateUser, ProjectController.deleteProject);
 
 // Task management routes within projects

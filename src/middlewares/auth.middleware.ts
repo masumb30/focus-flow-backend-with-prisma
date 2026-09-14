@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { AppError } from '../utils/appError.js';
 
 // Extend the Express Request type to include the decoded user payload
 export interface AuthenticatedRequest extends Request {
@@ -51,9 +52,6 @@ export const authenticateUser = (
     // Proceed to next middleware/controller
     next();
   } catch (error: any) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid or expired token. Please log in again.',
-    });
+    throw new AppError(error.message || 'Invalid or expired token. Please log in again.', 401);
   }
 };

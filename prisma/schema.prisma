@@ -1,8 +1,7 @@
 generator client {
   provider = "prisma-client"
-  output = "../src/generated"
+  output   = "../src/generated"
 }
-
 
 datasource db {
   provider = "postgresql"
@@ -30,18 +29,19 @@ enum TaskStatus {
 // ==========================================
 
 model User {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   name      String
-  email     String   @unique
+  email     String  @unique
   password  String
-  avatarUrl String?  @map("avatar_url")
+  avatarUrl String? @map("avatar_url")
 
   // Relations
-  todos         Todo[]
-  projects      Project[]
+  todos    Todo[]
+  projects Project[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  tasks     Task[]
 
   @@map("users")
 }
@@ -49,7 +49,7 @@ model User {
 model Todo {
   id     String   @id @default(cuid())
   title  String
-  status String   // e.g., "pending" | "completed"
+  status String // e.g., "pending" | "completed"
   date   DateTime @default(now())
 
   // Relation to User
@@ -90,12 +90,8 @@ model Task {
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  // Self-Relation for Subtasks (One-to-Many)
-  parentId String? @map("parent_id")
-  parent   Task?   @relation("TaskSubTasks", fields: [parentId], references: [id], onDelete: Cascade)
-  subTasks Task[]  @relation("TaskSubTasks")
-
-  
+  assignedToId   String? @map("assigned_to") // Optional relation to User
+  assignedTo User?   @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
