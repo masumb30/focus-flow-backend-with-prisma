@@ -21,6 +21,7 @@ const signUp = async (req: Request, res: Response) => {
 };
 
 const signIn = async (req: Request, res: Response) => {
+  console.log('SignIn request body:', req.body); // Debugging line to check the request body
   
   try {
     const { email, password } = req.body;
@@ -54,7 +55,47 @@ const signIn = async (req: Request, res: Response) => {
   }
 };
 
+const verifyUserToken = async (req: Request, res: Response) => {
+  console.log('caling verify')
+  const token = req.cookies.token;
+  if (!token) {
+    throw new AppError('No token found in cookies.', 401);
+  }
+
+  try {
+    const decoded = AuthService.verifyUserToken(token);
+    return res.status(200).json({
+      success: true,
+      message: 'Token verified successfully.',
+      data: decoded,
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Token verification failed.', 401);
+  }
+};
+
+const logoutController = async (req: Request, res: Response) => {
+  console.log('calling logout')
+  try {
+    // Clear the cookie by setting it with an expired date / clearing it
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Server error during logout' });
+  }
+}
+
 export const AuthController = {
   signUp,
   signIn,
+  verifyUserToken,
+  logoutController,
 };

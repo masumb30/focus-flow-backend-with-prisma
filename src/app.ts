@@ -13,7 +13,7 @@ import cookieParser from 'cookie-parser';
 
 const app: Application = express();
 
-const CLIENT_ORIGIN = process.env.CLIENT_URL || 'http://localhost:3000'; // Match your exact frontend port (NO trailing slash!)
+const CLIENT_ORIGIN = process.env.CLIENT_URL; // Match your exact frontend port (NO trailing slash!)
 
 app.use(
   cors({

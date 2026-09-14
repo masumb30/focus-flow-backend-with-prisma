@@ -86,8 +86,20 @@ const signInUser = async (data: SignInDTO) => {
   return { token, user: userWithoutPassword };
 };
 
+const verifyUserToken = (token: string) => {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    return decoded;
+  } catch (error) {
+    throw new AppError('Invalid token.', 401);
+  }
+};
+
+
+
 
 export const AuthService = {
   signUpUser,
   signInUser,
+  verifyUserToken,
 };
